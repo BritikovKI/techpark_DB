@@ -5,7 +5,7 @@ ENV PGVER 9.5
 RUN apt-get install -y postgresql-$PGVER
 USER postgres
 
-RUN /etc/init.d/postgresql start &&        psql --command "CREATE USER chapay WITH SUPERUSER PASSWORD '4rfgt5';" && createdb -E UTF8 -T template0 -O docker postgres && /etc/init.d/postgresql stop
+RUN /etc/init.d/postgresql start &&        psql --command "CREATE USER chapay WITH SUPERUSER PASSWORD '4rfgt5';" && createdb -E UTF8 -T template0 -O chapay postgres && /etc/init.d/postgresql stop
 
 RUN echo "local all all trust" >> /etc/postgresql/$PGVER/main/pg_hba.conf
 RUN echo "host  all all 127.0.0.1/32 trust" >> /etc/postgresql/$PGVER/main/pg_hba.conf
