@@ -16,7 +16,7 @@ public class Forum {
             @JsonProperty("slug") String slug,
             @JsonProperty("threads") Number threads,
             @JsonProperty("title") String title,
-            @JsonProperty("User") String user
+            @JsonProperty("user") String user
     ){
         this.posts=posts;
         this.slug=slug;
