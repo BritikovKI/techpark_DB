@@ -13,7 +13,7 @@ public class User {
 
     @JsonCreator
     public User(
-            @JsonProperty("user") String nickname,
+            @JsonProperty("nickname") String nickname,
             @JsonProperty("email") String email,
             @JsonProperty("fullname") String fullname,
             @JsonProperty("about") String about
