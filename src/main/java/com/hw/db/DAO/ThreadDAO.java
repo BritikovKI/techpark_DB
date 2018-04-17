@@ -1,9 +1,7 @@
 package com.hw.db.DAO;
 
 import com.hw.db.models.*;
-import com.hw.db.DAO.PostDAO;
 import com.hw.db.models.Thread;
-import javafx.geometry.Pos;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
