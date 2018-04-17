@@ -1,9 +1,9 @@
- DROP TABLE if EXISTS votes;
- DROP TABLE if EXISTS posts;
- DROP TABLE if EXISTS threads;
- DROP TABLE if EXISTS users_forum;
- DROP TABLE if EXISTS forums;
- DROP TABLE if EXISTS users;
+--  DROP TABLE if EXISTS votes;
+--  DROP TABLE if EXISTS posts;
+--  DROP TABLE if EXISTS threads;
+--  DROP TABLE if EXISTS users_forum;
+--  DROP TABLE if EXISTS forums;
+--  DROP TABLE if EXISTS users;
  CREATE EXTENSION IF NOT EXISTS citext;
 
 

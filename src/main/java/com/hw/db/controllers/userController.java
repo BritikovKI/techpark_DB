@@ -5,25 +5,21 @@ import com.hw.db.models.User;
 import com.hw.db.models.Message;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.db.models.User;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 
-import java.sql.SQLException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
 public class userController {
-    static ObjectMapper mapper = new ObjectMapper();
 
 
-    @PostMapping(path = "/{nick}/create", consumes = "application/json", produces = "application/json")
-    public ResponseEntity create(@PathVariable(name="nick") String nick,@RequestBody User user) throws JsonProcessingException {
+    @PostMapping(path = "/{user}/create", consumes = "application/json", produces = "application/json")
+    public ResponseEntity create(@PathVariable(name="user") String nick,@RequestBody User user) throws JsonProcessingException {
 
         user.setNickname(nick);
         List<User> resp = UserDAO.Create(user);
