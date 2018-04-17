@@ -24,7 +24,7 @@ public class Thread {
     public Thread(
             @JsonProperty("author") String author,
             @JsonProperty("created") Timestamp created,
-            @JsonProperty("Forum") String forum,
+            @JsonProperty("forum") String forum,
             @JsonProperty("message") String message,
             @JsonProperty("slug") String slug,
             @JsonProperty("title") String title,
