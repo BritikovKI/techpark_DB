@@ -10,10 +10,10 @@ public class Status {
     private Integer Thread;
     @JsonCreator
     public Status(
-            @JsonProperty("User") Integer user,
-            @JsonProperty("Forum") Integer Forum,
-            @JsonProperty("Post") Integer Post,
-            @JsonProperty("Thread") Integer Thread
+            @JsonProperty("user") Integer user,
+            @JsonProperty("forum") Integer Forum,
+            @JsonProperty("post") Integer Post,
+            @JsonProperty("thread") Integer Thread
     ){
         this.User=user;
         this.Forum=Forum;

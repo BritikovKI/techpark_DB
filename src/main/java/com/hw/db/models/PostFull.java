@@ -10,10 +10,10 @@ public class PostFull {
     private com.hw.db.models.Thread Thread;
     @JsonCreator
     PostFull(
-            @JsonProperty("User") com.hw.db.models.User User,
-            @JsonProperty("Forum") com.hw.db.models.Forum Forum,
-            @JsonProperty("Post") com.hw.db.models.Post Post,
-            @JsonProperty("Thread") com.hw.db.models.Thread Thread
+            @JsonProperty("user") com.hw.db.models.User User,
+            @JsonProperty("forum") com.hw.db.models.Forum Forum,
+            @JsonProperty("post") com.hw.db.models.Post Post,
+            @JsonProperty("thread") com.hw.db.models.Thread Thread
     ){
         this.User=User;
         this.Forum=Forum;
