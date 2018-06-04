@@ -129,7 +129,7 @@ public class ThreadDAO {
 
     public static List<Post> getPosts(Integer id, Integer limit, Integer since, String sort, Boolean desc) {
 
-        String SQL;
+        String SQL = "";
         List<Object> lst = new LinkedList<>();
         if(sort == null){
            sort = "flat";
@@ -160,8 +160,7 @@ public class ThreadDAO {
 
                 SQL += ";";
                 System.out.println(1);
-                return jdbc.query(SQL, POST_MAPPER, lst.toArray());
-
+                break;
             case "tree":
                 SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
                 lst.add(id);
@@ -188,7 +187,7 @@ public class ThreadDAO {
                 }
                 System.out.println(2);
                 SQL += ";";
-                return jdbc.query(SQL,POST_MAPPER,lst.toArray());
+                break;
             case "parent_tree":
                 SQL = "SELECT * FROM posts ";
                 if (limit != null){
@@ -221,9 +220,9 @@ public class ThreadDAO {
                 }
                 SQL += ",posts.branch ,posts.id;";
                 System.out.println(3);
-                return jdbc.query(SQL, POST_MAPPER, lst.toArray());
+                break;
             }
-            return null;
+            return jdbc.query(SQL, POST_MAPPER, lst.toArray());
            }
 
 
