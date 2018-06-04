@@ -128,121 +128,103 @@ public class ThreadDAO {
     }
 
     public static List<Post> getPosts(Integer id, Integer limit, Integer since, String sort, Boolean desc) {
-        String SQL="SELECT * FROM \"posts\" WHERE thread=? ";
-        List<Object> lst= new LinkedList<>();
-        lst.add(id);
 
-
-        if (sort!=null) {
-            if(sort.equals("flat")) {
-                if (since!=null)
-                {
-                    if (desc != null && desc == true )
-                    {
-                        SQL+= " AND id<? ";
-                    }
-                    else {
-                        SQL += " AND id>? ";
+        String SQL;
+        List<Object> lst = new LinkedList<>();
+        if(sort == null){
+           sort = "flat";
+        }
+        switch (sort){
+            case "flat":
+                SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
+                lst.add(id);
+                if(since != null){
+                    if(desc != null && desc){
+                        SQL += " AND id < ?";
+                    } else {
+                        SQL += " AND id > ?";
                     }
                     lst.add(since);
                 }
                 SQL += " ORDER BY ";
-                SQL += " created ";
-                if (desc != null && desc.equals(true))
-                {
-                    SQL+=" DESC ";
+                if( desc != null && desc){
+                    SQL += " created DESC, id DESC ";
+                } else {
+                    SQL += " created, id";
                 }
-                SQL += " ,id   ";
-            }
 
-            if(sort.equals("tree")){
+                if(limit!=null) {
+                    SQL += " LIMIT ? ";
+                    lst.add(limit);
+                }
+
+                SQL += ";";
+                System.out.println(1);
+                return jdbc.query(SQL, POST_MAPPER, lst.toArray());
+
+            case "tree":
+                SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
+                lst.add(id);
                 if (since != null) {
                     if (desc != null && desc.equals(true)) {
-                        SQL += " AND branch < (SELECT branch FROM posts WHERE id = ?) ";
-
+                        SQL += " AND branch < (SELECT branch " +
+                                " FROM posts WHERE id = ?) ";
                     }
                     else{
-                        SQL += " AND branch > (SELECT branch FROM posts WHERE id = ?) ";
+                        SQL += " AND branch > (SELECT branch " +
+                                " FROM posts WHERE id = ?) ";
                     }
                     lst.add(since);
+
                 }
                 SQL += " ORDER BY branch";
-            }
+                if (desc != null && desc) {
+                    SQL+=" DESC ";
+                }
 
-            if(sort.equals("parent_tree")){
-                SQL="SELECT * FROM  posts WHERE ";
-                lst.clear();
-                lst.add(id);
-                if(limit!=null){
-                    SQL+=" branch[1] IN (SELECT DISTINCT branch[1] FROM" +
-                            " posts WHERE thread=? ";
-                    if(since != null)
-                    {
-                        if (desc != null && desc.equals(true)) {
-                            SQL += " AND branch[1] < (SELECT branch[1] FROM posts WHERE id = ?) ";
-
-                        }
-                        else{
-                            SQL += " AND branch[1] > (SELECT branch[1] FROM posts WHERE id = ?) ";
+                if(limit!=null) {
+                    SQL+=" LIMIT ? ";
+                    lst.add(limit);
+                }
+                System.out.println(2);
+                SQL += ";";
+                return jdbc.query(SQL,POST_MAPPER,lst.toArray());
+            case "parent_tree":
+                SQL = "SELECT * FROM posts ";
+                if (limit != null){
+                    SQL += "JOIN (SELECT DISTINCT branch[1] as br " +
+                            " FROM posts WHERE thread = ? ";
+                    lst.add(id);
+                    if(since != null) {
+                        if (desc != null && desc) {
+                            SQL += " AND branch[1] < (SELECT branch[1]" +
+                                    " FROM posts WHERE id = ?) ";
+                        } else {
+                            SQL += " AND branch[1] > (SELECT branch[1] " +
+                                    " FROM posts WHERE id = ?) ";
                         }
                         lst.add(since);
                     }
-
-                    SQL+=" ORDER BY branch[1] ";
-                    if (desc != null && desc.equals(true)) {
+                    SQL += " ORDER BY br ";
+                    if (desc != null && desc){
                         SQL += " DESC ";
-
                     }
-                    SQL+=" LIMIT ?) ";
-
+                    SQL += " LIMIT ?) AS B " +
+                            "ON posts.branch[1] = B.br ";
                     lst.add(limit);
+                } else {
+                    SQL += " posts.thread = ?;";
                 }
-                else {
-                    SQL+=" thread=? ;";
+                SQL += " ORDER BY posts.branch[1] ";
+                if (desc != null && desc){
+                    SQL += " DESC ";
                 }
-                SQL += " ORDER BY branch[1] ";
-                if (desc != null && desc.equals(true))
-                {
-                    SQL+=" DESC ";
-                }
-
-
-                SQL+=",branch,id";
-                SQL+=";";
-                return jdbc.query(SQL,POST_MAPPER,lst.toArray());
+                SQL += ",posts.branch ,posts.id;";
+                System.out.println(3);
+                return jdbc.query(SQL, POST_MAPPER, lst.toArray());
             }
-        }
-        if(sort==null)
-        {
-            if (since!=null)
-            {
-                if (desc != null && desc == true )
-                {
-                    SQL+= " AND id<? ";
-                }
-                else {
-                    SQL += " AND id>? ";
-                }
-                lst.add(since);
-            }
-            SQL+=" ORDER BY ID";
-        }
-
-
-        if (desc != null && desc == true )
-        {
-            SQL+=" DESC ";
-        }
-
-        if(limit!=null)
-        {
-            SQL+=" LIMIT ? ";
-            lst.add(limit);
-        }
-
-        SQL+=";";
-        return jdbc.query(SQL,POST_MAPPER,lst.toArray());
-    }
+            return null;
+           }
 
 
     public static final class IntegerMapper implements RowMapper<Integer> {
@@ -254,6 +236,7 @@ public class ThreadDAO {
     public static void createPosts(String slug,List<Post> posts) {
         Timestamp curr=new Timestamp(Instant.now().toEpochMilli());
         String SQL = " INSERT INTO \"posts\" (message, created, author,forum, thread,parent) VALUES (?,(?)::TIMESTAMP WITH TIME ZONE ,(?)::CITEXT,?,?,?) RETURNING id; ";
+        String SQL2 =" INSERT INTO \"forum_users\" (forum, nickname) VALUES ((?)::CITEXT,(?)::CITEXT); ";
         for (Post post: posts
                 ) {
                 if(post.getParent()!=null){
@@ -267,6 +250,11 @@ public class ThreadDAO {
                     post.setCreated(curr);
                 }
                 post.setId( jdbc.queryForObject(SQL, Integer.class, post.getMessage(), post.getCreated(), post.getAuthor(), post.getForum(), post.getThread(), post.getParent()));
+            try {
+                jdbc.update(SQL2 , post.getForum(), post.getAuthor());
+            } catch (DuplicateKeyException Except){
+                System.out.println("Already exists;");
+            }
                 SetTree(post);
                 jdbc.update("UPDATE \"forums\" SET posts=posts+1 WHERE slug=?",post.getForum());
         }

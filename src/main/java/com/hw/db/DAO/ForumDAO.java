@@ -5,6 +5,7 @@ import com.hw.db.models.Forum;
 import com.hw.db.models.Thread;
 import com.hw.db.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
@@ -45,8 +46,14 @@ public class ForumDAO {
         }
         Thread res;
         String SQL;
+        String SQL2 =" INSERT INTO \"forum_users\" (forum, nickname) VALUES ((?)::CITEXT,(?)::CITEXT); ";
         SQL= "INSERT INTO \"threads\" (author,forum,message,title,slug,created) VALUES ((?)::CITEXT,(?)::CITEXT,?,?,?,(?)::TIMESTAMPTZ ) RETURNING *; ";
         res=jdbc.queryForObject(SQL, THREAD_MAPPER, thread.getAuthor(), thread.getForum(), thread.getMessage(), thread.getTitle(), thread.getSlug(), thread.getCreated());
+        try {
+            jdbc.update(SQL2 , thread.getForum(), thread.getAuthor());
+        } catch (DuplicateKeyException Except){
+            System.out.println("Already exists;");
+        }
         SQL="UPDATE \"forums\" SET threads=threads+1  WHERE slug = (?);";
         jdbc.update(SQL,thread.getForum());
         return res;
@@ -54,7 +61,7 @@ public class ForumDAO {
      }
 
     public static Forum Info(String slug){
-        String SQL = "SELECT * FROM \"forums\" WHERE LOWER(slug)=LOWER(?) LIMIT 1;" ;
+        String SQL = "SELECT * FROM \"forums\" WHERE slug=(?)::citext LIMIT 1;" ;
         return jdbc.queryForObject(SQL,FORUM_MAPPER,slug);
     }
 
@@ -89,26 +96,24 @@ public class ForumDAO {
     }
 
     public static List<User> UserList(String slug, Number limit, String since, Boolean desc) {
-        String SQL="SELECT * FROM users WHERE nickname IN  " +
-                   " ((SELECT author as creator FROM \"threads\" " +
-                   " WHERE forum=(?)::citext) UNION ( SELECT author as \"creator\" FROM posts" +
-                   " WHERE forum=(?)::citext))  ";
+        String SQL="SELECT * FROM users JOIN" +
+                "(SELECT nickname FROM forum_users WHERE forum=(?)::citext) AS B" +
+                " ON users.nickname = B.nickname  ";
         List<Object> conditions=new ArrayList<>();
-        conditions.add(slug);
         conditions.add(slug);
         if(since!=null)
         {
             if(desc!=null && desc)
             {
-                SQL+=" AND nickname < (?)::citext";
+                SQL+=" AND  users.nickname < (?)::citext";
                 conditions.add(since);
             }
             else {
-                SQL +=" AND nickname > (?)::citext";
+                SQL +=" AND  users.nickname > (?)::citext";
                 conditions.add(since);
             }
         }
-        SQL+=" ORDER BY nickname";
+        SQL+=" ORDER BY users.nickname";
         if(desc!=null && desc)
         {
             SQL+=" desc";
