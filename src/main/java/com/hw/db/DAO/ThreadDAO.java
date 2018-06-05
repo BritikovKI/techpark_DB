@@ -372,7 +372,13 @@ public class ThreadDAO {
                 );
                 post.setId(keyHolder.getKey().intValue());
             try {
-                jdbc.update(SQL2 , post.getForum(), post.getAuthor());
+                jdbc.update(connection -> {
+                    PreparedStatement pst =
+                            connection.prepareStatement(SQL2, PreparedStatement.RETURN_GENERATED_KEYS);
+                    pst.setString(1,post.getForum());
+                    pst.setString(2,post.getAuthor());
+                    return pst;
+                }, keyHolder);
             } catch (DuplicateKeyException Except){
                 System.out.println("Already exists;");
             }
