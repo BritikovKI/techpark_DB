@@ -127,7 +127,108 @@ public class ThreadDAO {
 
     }
 
-    public static List<Post> getPosts(Integer id, Integer limit, Integer since, String sort, Boolean desc) {
+    public static List<Post> flatSort(Integer id, Integer limit, Integer since, Boolean desc) {
+        List<Object> lst = new LinkedList<>();
+        String SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
+        lst.add(id);
+        if(since != null){
+            if(desc != null && desc){
+                SQL += " AND id < ?";
+            } else {
+                SQL += " AND id > ?";
+            }
+            lst.add(since);
+        }
+        SQL += " ORDER BY ";
+        if( desc != null && desc){
+            SQL += " created DESC, id DESC ";
+        } else {
+            SQL += " created, id";
+        }
+
+        if(limit!=null) {
+            SQL += " LIMIT ? ";
+            lst.add(limit);
+        }
+
+        SQL += ";";
+        System.out.println(1);
+        return jdbc.query(SQL, POST_MAPPER, lst.toArray());
+    }
+
+
+    public static List<Post> treeSort(Integer id, Integer limit, Integer since, Boolean desc) {
+        List<Object> lst = new LinkedList<>();
+        String SQL;
+        SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
+        lst.add(id);
+        if (since != null) {
+            if (desc != null && desc.equals(true)) {
+                SQL += " AND branch < (SELECT branch " +
+                        " FROM posts WHERE id = ?) ";
+            }
+            else{
+                SQL += " AND branch > (SELECT branch " +
+                        " FROM posts WHERE id = ?) ";
+            }
+            lst.add(since);
+
+        }
+        SQL += " ORDER BY branch";
+        if (desc != null && desc) {
+            SQL+=" DESC ";
+        }
+
+        if(limit!=null) {
+            SQL+=" LIMIT ? ";
+            lst.add(limit);
+        }
+        System.out.println(2);
+        SQL += ";";
+        return jdbc.query(SQL, POST_MAPPER, lst.toArray());
+    }
+
+
+
+    public static List<Post> parentSort(Integer id, Integer limit, Integer since, Boolean desc) {
+        List<Object> lst = new LinkedList<>();
+        String SQL;
+        SQL = "SELECT * FROM posts ";
+        if (limit != null){
+            SQL += "JOIN (SELECT id " +
+                    " FROM posts WHERE parent IS NULL AND thread = ? ";
+            lst.add(id);
+            if(since != null) {
+                if (desc != null && desc) {
+                    SQL += " AND id < (SELECT branch[1]" +
+                            " FROM posts WHERE id = ?) ";
+                } else {
+                    SQL += " AND id > (SELECT branch[1] " +
+                            " FROM posts WHERE id = ?) ";
+                }
+                lst.add(since);
+            }
+            SQL += " ORDER BY id ";
+            if (desc != null && desc){
+                SQL += " DESC ";
+            }
+            SQL += " LIMIT ?) AS B " +
+                    "ON posts.branch[1] = B.id ";
+            lst.add(limit);
+        }
+        SQL += "WHERE posts.thread = ?";
+        lst.add(id);
+        SQL += " ORDER BY posts.branch[1] ";
+        if (desc != null && desc){
+            SQL += " DESC ";
+        }
+        SQL += ",posts.branch ,posts.id;";
+        System.out.println(3);
+        return jdbc.query(SQL, POST_MAPPER, lst.toArray());
+    }
+
+
+        public static List<Post> getPosts(Integer id, Integer limit, Integer since, String sort, Boolean desc) {
 
         String SQL = "";
         List<Object> lst = new LinkedList<>();
@@ -136,93 +237,96 @@ public class ThreadDAO {
         }
         switch (sort){
             case "flat":
-                SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
-                lst.add(id);
-                if(since != null){
-                    if(desc != null && desc){
-                        SQL += " AND id < ?";
-                    } else {
-                        SQL += " AND id > ?";
-                    }
-                    lst.add(since);
-                }
-                SQL += " ORDER BY ";
-                if( desc != null && desc){
-                    SQL += " created DESC, id DESC ";
-                } else {
-                    SQL += " created, id";
-                }
-
-                if(limit!=null) {
-                    SQL += " LIMIT ? ";
-                    lst.add(limit);
-                }
-
-                SQL += ";";
-                System.out.println(1);
-                break;
+                return flatSort(id, limit, since, desc);
+//                SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
+//                lst.add(id);
+//                if(since != null){
+//                    if(desc != null && desc){
+//                        SQL += " AND id < ?";
+//                    } else {
+//                        SQL += " AND id > ?";
+//                    }
+//                    lst.add(since);
+//                }
+//                SQL += " ORDER BY ";
+//                if( desc != null && desc){
+//                    SQL += " created DESC, id DESC ";
+//                } else {
+//                    SQL += " created, id";
+//                }
+//
+//                if(limit!=null) {
+//                    SQL += " LIMIT ? ";
+//                    lst.add(limit);
+//                }
+//
+//                SQL += ";";
+//                System.out.println(1);
+//                break;
             case "tree":
-                SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
-                lst.add(id);
-                if (since != null) {
-                    if (desc != null && desc.equals(true)) {
-                        SQL += " AND branch < (SELECT branch " +
-                                " FROM posts WHERE id = ?) ";
-                    }
-                    else{
-                        SQL += " AND branch > (SELECT branch " +
-                                " FROM posts WHERE id = ?) ";
-                    }
-                    lst.add(since);
-
-                }
-                SQL += " ORDER BY branch";
-                if (desc != null && desc) {
-                    SQL+=" DESC ";
-                }
-
-                if(limit!=null) {
-                    SQL+=" LIMIT ? ";
-                    lst.add(limit);
-                }
-                System.out.println(2);
-                SQL += ";";
-                break;
+                return treeSort(id, limit, since, desc);
+//                SQL = "SELECT * FROM \"posts\" WHERE thread = ? ";
+//                lst.add(id);
+//                if (since != null) {
+//                    if (desc != null && desc.equals(true)) {
+//                        SQL += " AND branch < (SELECT branch " +
+//                                " FROM posts WHERE id = ?) ";
+//                    }
+//                    else{
+//                        SQL += " AND branch > (SELECT branch " +
+//                                " FROM posts WHERE id = ?) ";
+//                    }
+//                    lst.add(since);
+//
+//                }
+//                SQL += " ORDER BY branch";
+//                if (desc != null && desc) {
+//                    SQL+=" DESC ";
+//                }
+//
+//                if(limit!=null) {
+//                    SQL+=" LIMIT ? ";
+//                    lst.add(limit);
+//                }
+//                System.out.println(2);
+//                SQL += ";";
+//                break;
             case "parent_tree":
-                SQL = "SELECT * FROM posts ";
-                if (limit != null){
-                    SQL += "JOIN (SELECT DISTINCT branch[1] as br " +
-                            " FROM posts WHERE thread = ? ";
-                    lst.add(id);
-                    if(since != null) {
-                        if (desc != null && desc) {
-                            SQL += " AND branch[1] < (SELECT branch[1]" +
-                                    " FROM posts WHERE id = ?) ";
-                        } else {
-                            SQL += " AND branch[1] > (SELECT branch[1] " +
-                                    " FROM posts WHERE id = ?) ";
-                        }
-                        lst.add(since);
-                    }
-                    SQL += " ORDER BY br ";
-                    if (desc != null && desc){
-                        SQL += " DESC ";
-                    }
-                    SQL += " LIMIT ?) AS B " +
-                            "ON posts.branch[1] = B.br ";
-                    lst.add(limit);
-                } else {
-                    SQL += " posts.thread = ?;";
-                }
-                SQL += " ORDER BY posts.branch[1] ";
-                if (desc != null && desc){
-                    SQL += " DESC ";
-                }
-                SQL += ",posts.branch ,posts.id;";
-                System.out.println(3);
-                break;
+                return parentSort(id, limit, since, desc);
+//                SQL = "SELECT * FROM posts ";
+//                if (limit != null){
+//                    SQL += "JOIN (SELECT DISTINCT branch[1] as br " +
+//                            " FROM posts WHERE thread = ? ";
+//                    lst.add(id);
+//                    if(since != null) {
+//                        if (desc != null && desc) {
+//                            SQL += " AND branch[1] < (SELECT branch[1]" +
+//                                    " FROM posts WHERE id = ?) ";
+//                        } else {
+//                            SQL += " AND branch[1] > (SELECT branch[1] " +
+//                                    " FROM posts WHERE id = ?) ";
+//                        }
+//                        lst.add(since);
+//                    }
+//                    SQL += " ORDER BY br ";
+//                    if (desc != null && desc){
+//                        SQL += " DESC ";
+//                    }
+//                    SQL += " LIMIT ?) AS B " +
+//                            "ON posts.branch[1] = B.br ";
+//                    lst.add(limit);
+//                } else {
+//                    SQL += " posts.thread = ?;";
+//                }
+//                SQL += " ORDER BY posts.branch[1] ";
+//                if (desc != null && desc){
+//                    SQL += " DESC ";
+//                }
+//                SQL += ",posts.branch ,posts.id;";
+//                System.out.println(3);
+//                break;
             }
-            return jdbc.query(SQL, POST_MAPPER, lst.toArray());
+            return null;
            }
 
 

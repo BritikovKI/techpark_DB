@@ -72,20 +72,17 @@ CREATE INDEX threads_slug ON threads(slug);
 CREATE INDEX forum_users_forum ON forum_users(forum);
 CREATE INDEX thread_forum ON threads(forum);
 
-CREATE INDEX posts_thread ON posts(thread, id, created);
-DROP INDEX posts_thread ;
-DROP INDEX posts_thread_c ;
+
+CREATE INDEX posts_id ON posts(id);
+CREATE INDEX posts_thread_id ON posts(thread, id, created);
 CREATE INDEX posts_thread_b ON posts(thread, branch);
 CREATE INDEX posts_thread_b1 ON posts(thread, (branch[1]), branch, id);
+CREATE INDEX posts_thread_b1 ON posts(thread, (branch[1]));
+
 
 CREATE INDEX posts_thread ON posts(thread);
-CREATE INDEX posts_thread_b2 ON posts((branch[1]));
-CREATE INDEX posts_branch ON posts(branch);
-CREATE INDEX posts_creade ON posts(created);
+CLUSTER posts USING posts_id;
 
 DROP INDEX posts_thread ;
-DROP INDEX posts_thread_b2 ;
-DROP INDEX posts_branch ;
-DROP INDEX posts_creade ;
 DROP INDEX posts_thread_b ;
 DROP INDEX posts_thread_b1 ;
