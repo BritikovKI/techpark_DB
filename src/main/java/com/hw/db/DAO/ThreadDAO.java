@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -338,7 +339,10 @@ public class ThreadDAO {
 
     public static void createPosts(String slug,List<Post> posts) {
         Timestamp curr=new Timestamp(Instant.now().toEpochMilli());
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         String SQL = " INSERT INTO \"posts\" (message, created, author,forum, thread,parent) VALUES (?,(?)::TIMESTAMP WITH TIME ZONE ,(?)::CITEXT,?,?,?) RETURNING id; ";
+
+
         String SQL2 =" INSERT INTO \"forum_users\" (forum, nickname) VALUES ((?)::CITEXT,(?)::CITEXT); ";
         for (Post post: posts
                 ) {
@@ -352,7 +356,21 @@ public class ThreadDAO {
                 {
                     post.setCreated(curr);
                 }
-                post.setId( jdbc.queryForObject(SQL, Integer.class, post.getMessage(), post.getCreated(), post.getAuthor(), post.getForum(), post.getThread(), post.getParent()));
+
+                jdbc.update( connection -> {
+                            PreparedStatement pst =
+                                    connection.prepareStatement(SQL, PreparedStatement.RETURN_GENERATED_KEYS);
+                            pst.setString(1,post.getMessage());
+                            pst.setString(2,post.getCreated().toString());
+                            pst.setString(3,post.getAuthor());
+                            pst.setString(4,post.getForum());
+                            pst.setLong(5,post.getThread());
+                            pst.setObject(6,post.getParent());
+                            return pst;
+                        },
+                        keyHolder
+                );
+                post.setId(keyHolder.getKey().intValue());
             try {
                 jdbc.update(SQL2 , post.getForum(), post.getAuthor());
             } catch (DuplicateKeyException Except){
