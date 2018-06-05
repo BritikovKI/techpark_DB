@@ -72,17 +72,6 @@ CREATE INDEX threads_slug ON threads(slug);
 CREATE INDEX forum_users_forum ON forum_users(forum);
 CREATE INDEX thread_forum ON threads(forum);
 
-
-CREATE INDEX posts_id ON posts(id);
 CREATE INDEX posts_thread_id ON posts(thread, id, created);
 CREATE INDEX posts_thread_b ON posts(thread, branch);
-CREATE INDEX posts_thread_b1 ON posts(thread, (branch[1]), branch, id);
 CREATE INDEX posts_thread_b1 ON posts(thread, (branch[1]));
-
-
-CREATE INDEX posts_thread ON posts(thread);
-CLUSTER posts USING posts_id;
-
-DROP INDEX posts_thread ;
-DROP INDEX posts_thread_b ;
-DROP INDEX posts_thread_b1 ;
