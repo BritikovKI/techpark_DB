@@ -377,8 +377,9 @@ public class ThreadDAO {
                 System.out.println("Already exists;");
             }
                 SetTree(post);
-                jdbc.update("UPDATE \"forums\" SET posts=posts+1 WHERE slug=?",post.getForum());
+
         }
+        jdbc.update("UPDATE \"forums\" SET posts=posts + ? WHERE slug=?",posts.size(), posts.get(0).getForum());
 
 
     }
