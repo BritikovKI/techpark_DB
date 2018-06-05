@@ -337,11 +337,11 @@ public class ThreadDAO {
         }
     }
 
-    public static void createPosts(String slug,List<Post> posts) {
+    public static void createPosts(Thread th,List<Post> posts) {
         Timestamp curr=new Timestamp(Instant.now().toEpochMilli());
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         String SQL = " INSERT INTO \"posts\" (message, created, author,forum, thread,parent) VALUES (?,(?)::TIMESTAMP WITH TIME ZONE ,(?)::CITEXT,?,?,?) RETURNING id; ";
-
+        int size = posts.size();
 
         String SQL2 =" INSERT INTO \"forum_users\" (forum, nickname) VALUES ((?)::CITEXT,(?)::CITEXT); ";
         for (Post post: posts
@@ -372,20 +372,22 @@ public class ThreadDAO {
                 );
                 post.setId(keyHolder.getKey().intValue());
             try {
-                jdbc.update(connection -> {
-                    PreparedStatement pst =
-                            connection.prepareStatement(SQL2, PreparedStatement.RETURN_GENERATED_KEYS);
-                    pst.setString(1,post.getForum());
-                    pst.setString(2,post.getAuthor());
-                    return pst;
-                }, keyHolder);
+                jdbc.update( connection -> {
+                            PreparedStatement pst =
+                                    connection.prepareStatement(SQL2, PreparedStatement.RETURN_GENERATED_KEYS);
+                            pst.setString(1,post.getForum());
+                            pst.setString(2,post.getAuthor());
+                            return pst;
+                        },
+                        keyHolder
+                );
             } catch (DuplicateKeyException Except){
                 System.out.println("Already exists;");
             }
                 SetTree(post);
 
         }
-        jdbc.update("UPDATE \"forums\" SET posts=posts + ? WHERE slug=?",posts.size(), posts.get(0).getForum());
+        jdbc.update("UPDATE \"forums\" SET posts = posts + ?  WHERE slug=(?)::citext;",size, th.getForum());
 
 
     }

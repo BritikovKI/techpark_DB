@@ -59,7 +59,7 @@ public class threadController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Message("Раздел не найден."));
         }
         try {
-            ThreadDAO.createPosts(slug,posts);
+            ThreadDAO.createPosts(th,posts);
         }
         catch (DataAccessException Exc) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new Message("Хотя бы один родительский пост отсутсвует в текущей ветке обсуждения."));
