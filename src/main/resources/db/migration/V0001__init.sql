@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS votes(
 CREATE TABLE IF NOT EXISTS forum_users(
   id SERIAL NOT NULL PRIMARY KEY ,
   forum CITEXT REFERENCES forums(slug),
-  nickname CITEXT COLLATE ucs_basic NOT NULL,
+  nickname CITEXT REFERENCES users(nickname),
   fullname TEXT ,
   email CITEXT NOT NULL  UNIQUE ,
   about TEXT,
