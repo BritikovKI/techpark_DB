@@ -40,17 +40,19 @@ public class ForumDAO {
         jdbc.update(SQL, forum.getSlug(), forum.getTitle(), forum.getUser());
     }
 
-    public static Thread CreateThread(Thread thread){
+    public static Thread CreateThread(Thread thread, User creator){
         if(thread.getCreated()==null) {
             thread.setCreated(new Timestamp(System.currentTimeMillis()));
         }
         Thread res;
         String SQL;
-        String SQL2 =" INSERT INTO \"forum_users\" (forum, nickname) VALUES ((?)::CITEXT,(?)::CITEXT); ";
+        String SQL2 =" INSERT INTO \"forum_users\" (forum, nickname,email,fullname,about) " +
+                "VALUES ((?)::CITEXT,(?)::CITEXT,(?)::citext,?,?); ";
         SQL= "INSERT INTO \"threads\" (author,forum,message,title,slug,created) VALUES ((?)::CITEXT,(?)::CITEXT,?,?,?,(?)::TIMESTAMPTZ ) RETURNING *; ";
         res=jdbc.queryForObject(SQL, THREAD_MAPPER, thread.getAuthor(), thread.getForum(), thread.getMessage(), thread.getTitle(), thread.getSlug(), thread.getCreated());
         try {
-            jdbc.update(SQL2 , thread.getForum(), thread.getAuthor());
+            jdbc.update(SQL2 , thread.getForum(), thread.getAuthor(), creator.getEmail(),
+                    creator.getFullname(),creator.getAbout());
         } catch (DuplicateKeyException Except){
             System.out.println("Already exists;");
         }
@@ -96,24 +98,23 @@ public class ForumDAO {
     }
 
     public static List<User> UserList(String slug, Number limit, String since, Boolean desc) {
-        String SQL="SELECT * FROM users JOIN" +
-                "(SELECT nickname FROM forum_users WHERE forum=(?)::citext) AS B" +
-                " ON users.nickname = B.nickname  ";
+        String SQL="SELECT nickname,fullname,email,about FROM forum_users" +
+                " WHERE forum = (?)::citext";
         List<Object> conditions=new ArrayList<>();
         conditions.add(slug);
         if(since!=null)
         {
             if(desc!=null && desc)
             {
-                SQL+=" AND  users.nickname < (?)::citext";
+                SQL+=" AND  nickname < (?)::citext";
                 conditions.add(since);
             }
             else {
-                SQL +=" AND  users.nickname > (?)::citext";
+                SQL +=" AND  nickname > (?)::citext";
                 conditions.add(since);
             }
         }
-        SQL+=" ORDER BY users.nickname";
+        SQL+=" ORDER BY nickname";
         if(desc!=null && desc)
         {
             SQL+=" desc";

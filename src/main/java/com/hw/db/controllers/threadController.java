@@ -20,6 +20,7 @@ import org.springframework.dao.DuplicateKeyException;
 import javax.websocket.server.PathParam;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -41,17 +42,21 @@ public class threadController {
     @PostMapping(path = "/{slug_or_id}/create" ,consumes = "application/json", produces = "application/json")
     public ResponseEntity createPost(@PathVariable(name="slug_or_id") String slug, @RequestBody List<Post> posts){
         Thread th=new Thread();
+        List<User> users = new ArrayList<>();
         try
         {
             th=CheckIdOrSlug(slug);
-            User user = new User();
+
 //            post.setThread("some");
+            int i=0;
             for (Post post:posts
                  ) {
+
                 post.setForum(th.getForum());
-                user=UserDAO.Info(post.getAuthor());
-                post.setAuthor(user.getNickname());
+                users.add(UserDAO.Info(post.getAuthor()));
+                post.setAuthor(users.get(i).getNickname());
                 post.setThread(th.getId());
+                i++;
             }
         }
         catch (DataAccessException Exc)
@@ -59,7 +64,7 @@ public class threadController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Message("Раздел не найден."));
         }
         try {
-            ThreadDAO.createPosts(th,posts);
+            ThreadDAO.createPosts(th,posts,users);
         }
         catch (DataAccessException Exc) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new Message("Хотя бы один родительский пост отсутсвует в текущей ветке обсуждения."));

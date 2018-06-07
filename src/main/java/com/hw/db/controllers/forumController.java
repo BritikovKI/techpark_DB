@@ -71,7 +71,7 @@ public class forumController {
         th.setAuthor(creator.getNickname());
         th.setForum(forum.getSlug());
         try {
-            th=ForumDAO.CreateThread(th);
+            th=ForumDAO.CreateThread(th,creator);
         } catch (DuplicateKeyException Except) {
             th=ThreadDAO.getThreadBySlug(th.getSlug());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(th);

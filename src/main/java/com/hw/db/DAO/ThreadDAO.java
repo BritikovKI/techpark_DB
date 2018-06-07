@@ -337,13 +337,15 @@ public class ThreadDAO {
         }
     }
 
-    public static void createPosts(Thread th,List<Post> posts) {
+    public static void createPosts(Thread th,List<Post> posts, List<User> users) {
         Timestamp curr=new Timestamp(Instant.now().toEpochMilli());
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         String SQL = " INSERT INTO \"posts\" (message, created, author,forum, thread,parent) VALUES (?,(?)::TIMESTAMP WITH TIME ZONE ,(?)::CITEXT,?,?,?) RETURNING id; ";
         int size = posts.size();
 
-        String SQL2 =" INSERT INTO \"forum_users\" (forum, nickname) VALUES ((?)::CITEXT,(?)::CITEXT); ";
+        String SQL2 =" INSERT INTO \"forum_users\" (forum, nickname,email,fullname,about) " +
+                "VALUES ((?)::CITEXT,(?)::CITEXT,(?)::citext,?,?); ";
+        int i = 0;
         for (Post post: posts
                 ) {
                 if(post.getParent()!=null){
@@ -372,11 +374,19 @@ public class ThreadDAO {
                 );
                 post.setId(keyHolder.getKey().intValue());
             try {
+                final  int k = i;
                 jdbc.update( connection -> {
                             PreparedStatement pst =
                                     connection.prepareStatement(SQL2, PreparedStatement.RETURN_GENERATED_KEYS);
+
                             pst.setString(1,post.getForum());
-                            pst.setString(2,post.getAuthor());
+                            pst.setString(2,users.get(k).getNickname());
+
+                            pst.setString(3,users.get(k).getEmail());
+
+                            pst.setString(4,users.get(k).getFullname());
+
+                            pst.setString(5,users.get(k).getAbout());
                             return pst;
                         },
                         keyHolder
@@ -385,7 +395,7 @@ public class ThreadDAO {
                 System.out.println("Already exists;");
             }
                 SetTree(post);
-
+            i++;
         }
         jdbc.update("UPDATE \"forums\" SET posts = posts + ?  WHERE slug=(?)::citext;",size, th.getForum());
 
