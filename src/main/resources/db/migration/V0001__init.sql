@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS forum_users(
   forum CITEXT REFERENCES forums(slug),
   nickname CITEXT REFERENCES users(nickname),
   fullname TEXT ,
-  email CITEXT NOT NULL  UNIQUE ,
+  email CITEXT NOT NULL ,
   about TEXT,
   UNIQUE (forum,nickname)
 );
