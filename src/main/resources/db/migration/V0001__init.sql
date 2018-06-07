@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS forum_users(
 CREATE INDEX threads_slug ON threads(slug);
 CREATE INDEX forum_users_forum ON forum_users(forum);
 CREATE INDEX thread_forum ON threads(forum);
+CREATE INDEX forum_slug ON forums(slug);
 
 CREATE INDEX posts_thread_id ON posts(thread, id, created);
 CREATE INDEX posts_thread_b ON posts(thread, branch);
